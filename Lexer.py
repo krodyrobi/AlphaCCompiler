@@ -82,6 +82,12 @@ class Lexer(object):
                     elif self.character == '/':
                         self.state = 31
                         self._consume_char(f)
+                    elif self.character == '\'':
+                        self.state = 34
+                        self._consume_char(f)
+                    elif self.character == '"':
+                        self.state = 38
+                        self._consume_char(f)
 
 
                 elif self.state == 1:
@@ -209,6 +215,56 @@ class Lexer(object):
                 elif self.state == 33:
                     self._create_token(Tokens.DIV)
 
+
+                elif self.state == 34:
+                    if self.character == '\\':
+                        self.state = 35
+                        self._consume_char(f)
+                    elif self.character not in "'\\":
+                        self.state = 36
+                        self._consume_char(f)
+                    else:
+                        self._token_error(Tokens.CT_CHAR)
+                elif self.state == 35:
+                    if self.character in 'abfnrtv\'?"0\\':
+                        self.state = 36
+                        self._consume_char(f)
+                    else:
+                        self._token_error(Tokens.CT_CHAR, custom="Expected escape sequence")
+                elif self.state == 36:
+                    if self.character == '\'':
+                        self.state = 37
+                        self._consume_char(f)
+                    else:
+                        self._token_error(Tokens.CT_CHAR, expected_chars='\'', got=self.character)
+                elif self.state == 37:
+                    self._create_token(Tokens.CT_CHAR, value='CHAR HERE')
+                elif self.state == 38:
+                    if self.character == '"':
+                        self.state = 41
+                        self._consume_char(f)
+                    elif self.character == '\\':
+                        self.state = 39
+                        self._consume_char(f)
+                    elif self.character not in "\"\\":
+                        self.state = 40
+                        self._consume_char(f)
+                    else:
+                        self._token_error(Tokens.CT_STRING)
+                elif self.state == 39:
+                    if self.character in 'abfnrtv\'?"0\\':
+                        self.state = 40
+                        self._consume_char(f)
+                    else:
+                        self._token_error(Tokens.CT_STRING, custom="Expected escape sequence")
+                elif self.state == 40:
+                    if self.character == '"':
+                        self.state = 41
+                        self._consume_char(f)
+                    else:
+                        self.state = 38
+                elif self.state == 41:
+                    self._create_token(Tokens.CT_STRING, value='STRING HERE')
 
                 # Check end of file
                 # check it last so the previous consumed char
