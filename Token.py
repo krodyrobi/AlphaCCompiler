@@ -14,6 +14,6 @@ class Token(object):
     def __str__(self):
         value = ''
         if self.value:
-            value = ':' + self.value
+            value = ':' + str(self.value)
 
-        return str(self.code) + value + ('(%d, %d)' % (self.line, self.column))
+        return str(self.code) + ('(%d, %d)' % (self.line, self.column) + value)

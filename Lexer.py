@@ -5,13 +5,28 @@ from Tokens import Tokens
 
 
 class Lexer(object):
+    keywords_map = {
+        'if':     Tokens.IF,
+        'else':   Tokens.ELSE,
+        'for':    Tokens.FOR,
+        'while':  Tokens.WHILE,
+        'break':  Tokens.BREAK,
+        'char':   Tokens.CHAR,
+        'double': Tokens.DOUBLE,
+        'int':    Tokens.INT,
+        'return': Tokens.RETURN,
+        'void':   Tokens.VOID,
+        'struct': Tokens.STRUCT
+    }
+
     def __init__(self):
         self.__prepare_scan()
 
     def scan(self, file_path):
         self.__prepare_scan()
         end_hit = False
-        marker = -1
+        offset = 0
+        integer_base = 10
 
         with open(file_path, 'r') as f:
             self._consume_char(f)
@@ -80,6 +95,8 @@ class Lexer(object):
                     elif self.character == '&':
                         self.state = 27
                         self._consume_char(f)
+
+                    # Comments + DIV
                     elif self.character == '/':
                         self.state = 31
                         self._consume_char(f)
@@ -90,6 +107,22 @@ class Lexer(object):
                     elif self.character == '"':
                         self.state = 38
                         marker = f.tell()
+                        self._consume_char(f)
+
+                    # ID
+                    elif self.character in string.ascii_letters + '_':
+                        self.state = 42
+                        marker = f.tell() - 1
+                        self._consume_char(f)
+
+                    # CT_INT
+                    elif self.character == '0':
+                        self.state = 44
+                        marker = f.tell() - 1
+                        self._consume_char(f)
+                    elif self.character in '123456789':
+                        self.state = 50
+                        marker = f.tell() - 1
                         self._consume_char(f)
 
 
@@ -241,7 +274,7 @@ class Lexer(object):
                     else:
                         self._token_error(Tokens.CT_CHAR, expected_chars='\'', got=self.character)
                 elif self.state == 37:
-                    value = self._getString(f, marker, f.tell(), -2)
+                    value = self._getString(f, marker, -2)
                     self._create_token(Tokens.CT_CHAR, value=value)
                 elif self.state == 38:
                     if self.character == '"':
@@ -268,9 +301,167 @@ class Lexer(object):
                     else:
                         self.state = 38
                 elif self.state == 41:
-                    value = self._getString(f, marker, f.tell(), -2)
+                    value = self._getString(f, marker, -2)
                     self._create_token(Tokens.CT_STRING, value=value)
 
+                # ID
+                elif self.state == 42:
+                    if self.character in string.ascii_letters + string.digits + '_':
+                        self._consume_char(f)
+                        # If file ends right after this character jump to
+                        # finalize the ID
+                        if not self.character:
+                            self.state = 43
+                            offset = 0
+                        else:
+                            offset = -1
+                            self.state = 42
+                    else:
+                        self.state = 43
+                elif self.state == 43:
+                    value = self._getString(f, marker, offset)
+                    code = self.keywords_map.get(value, Tokens.ID)
+
+                    if code != Tokens.ID:
+                        value = None
+                    self._create_token(code, value)
+
+                # CT_INT
+                elif self.state == 44:
+                    if self.character == 'x':
+                        integer_base = 16
+                        self.state = 45
+                        self._consume_char(f)
+                    elif self.character in '89':
+                        self.state = 48
+                        self._consume_char(f)
+                    else:
+                        self.state = 47
+                elif self.state == 45:
+                    if self.character in string.hexdigits:
+                        self.state = 46
+                        self._consume_char(f)
+                    else:
+                        self._token_error(Tokens.CT_INT, string.hexdigits, self.character)
+                elif self.state == 46:
+                    if self.character in string.hexdigits:
+                        self.state = 46
+                        self._consume_char(f)
+                    else:
+                        self.state = 51
+                elif self.state == 47:
+                    integer_base = 8
+                    if self.character in '01234567':
+                        self._consume_char(f)
+                        if not self.character:
+                            self.state = 51
+                            offset = 0
+                        else:
+                            self.state = 47
+                            offset = -1
+                    elif self.character == '.':
+                        self.state = 52
+                        self._consume_char(f)
+                    elif self.character in '89':
+                        self._consume_char(f)
+                        self.state = 49
+                    elif self.character in 'eE':
+                        self._consume_char(f)
+                        self.state = 54
+                    else:
+                        self.state = 51
+                elif self.state == 48:
+                    if self.character in string.digits:
+                        self.state = 48
+                        self._consume_char(f)
+                    elif self.character == '.':
+                        self.state = 52
+                        self._consume_char(f)
+                    elif self.character in 'eE':
+                        self._consume_char(f)
+                        self.state = 54
+                    else:
+                        self._token_error(Tokens.CT_REAL, expected_chars='eE.'+string.digits, got=self.character)
+                elif self.state == 49:
+                    if self.character in string.digits:
+                        self.state = 49
+                        self._consume_char(f)
+                    elif self.character == '.':
+                        self.state = 52
+                        self._consume_char(f)
+                    elif self.character in 'eE':
+                        self._consume_char(f)
+                        self.state = 54
+                    else:
+                        self._token_error(Tokens.CT_REAL, expected_chars='eE.'+string.digits, got=self.character)
+                elif self.state == 50:
+                    integer_base = 10
+                    if self.character in string.digits:
+                        self._consume_char(f)
+                        if not self.character:
+                            self.state = 51
+                            offset = 0
+                        else:
+                            self.state = 50
+                            offset = -1
+                    elif self.character == '.':
+                        self.state = 52
+                        self._consume_char(f)
+                    elif self.character in 'eE':
+                        self._consume_char(f)
+                        self.state = 54
+                    else:
+                        self.state = 51
+                elif self.state == 51:
+                    value = int(self._getString(f, marker, offset), integer_base)
+                    self._create_token(Tokens.CT_INT, value)
+                elif self.state == 52:
+                    if self.character in string.digits:
+                        self.state = 53
+                        self._consume_char(f)
+                    else:
+                        self._token_error(Tokens.CT_REAL, expected_chars=string.digits, got=self.character)
+                elif self.state == 53:
+                    if self.character in string.digits:
+                        self._consume_char(f)
+                        if not self.character:
+                            self.state = 57
+                            offset = 0
+                        else:
+                            self.state = 53
+                            offset = -1
+                    elif self.character in 'eE':
+                        self.state = 54
+                        self._consume_char(f)
+                    else:
+                        self.state = 57
+                elif self.state == 54:
+                    if self.character in '+-':
+                        self.state = 55
+                        self._consume_char(f)
+                    else:
+                        self.state = 55
+                elif self.state == 55:
+                    if self.character in string.digits:
+                        self.state = 56
+                        self._consume_char(f)
+                    else:
+                        self._token_error(Tokens.CT_REAL, expected_chars=string.digits, got=self.character)
+                elif self.state == 56:
+                    if self.character in string.digits:
+                        self._consume_char(f)
+
+                        if not self.character:
+                            self.state = 57
+                            offset = 0
+                        else:
+                            self.state = 56
+                            offset = -1
+                    else:
+                        self.state = 57
+                elif self.state == 57:
+                    value = float(self._getString(f, marker, offset))
+                    self._create_token(Tokens.CT_REAL, value)
 
                 # Check end of file
                 # check it last so the previous consumed char
@@ -288,7 +479,8 @@ class Lexer(object):
                     end_hit = True
 
     def show_tokens(self):
-        print([str(token) for token in self.tokens])
+        for token in self.tokens:
+            print(str(token))
 
     def __prepare_scan(self):
         self.tokens = []
@@ -311,8 +503,8 @@ class Lexer(object):
         token = Token(code=code, line=self.line, column=self.column)
 
         if expected_chars and got:
-            expected_chars = 'Expected ' + expected_chars
-            got = 'but got "' + got + '" instead'
+            expected_chars = 'Expected [' + expected_chars + ']'
+            got = ', but got ' + repr(got) + ' instead'
 
         # to be removed only for debugging
         self.show_tokens()
@@ -324,9 +516,12 @@ class Lexer(object):
 
         exit(1)
 
-    def _getString(self, file, marker, current, offset=0):
+    def _getString(self, file, marker, offset=0):
+        current = file.tell()
+
         file.seek(marker)
         value = file.read(current - marker + offset)
+
         file.seek(current)
 
         return value
