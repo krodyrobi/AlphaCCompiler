@@ -11,6 +11,7 @@ class Lexer(object):
     def scan(self, file_path):
         self.__prepare_scan()
         end_hit = False
+        marker = -1
 
         with open(file_path, 'r') as f:
             self._consume_char(f)
@@ -84,9 +85,11 @@ class Lexer(object):
                         self._consume_char(f)
                     elif self.character == '\'':
                         self.state = 34
+                        marker = f.tell()
                         self._consume_char(f)
                     elif self.character == '"':
                         self.state = 38
+                        marker = f.tell()
                         self._consume_char(f)
 
 
@@ -238,7 +241,8 @@ class Lexer(object):
                     else:
                         self._token_error(Tokens.CT_CHAR, expected_chars='\'', got=self.character)
                 elif self.state == 37:
-                    self._create_token(Tokens.CT_CHAR, value='CHAR HERE')
+                    value = self._getString(f, marker, f.tell(), -2)
+                    self._create_token(Tokens.CT_CHAR, value=value)
                 elif self.state == 38:
                     if self.character == '"':
                         self.state = 41
@@ -264,7 +268,9 @@ class Lexer(object):
                     else:
                         self.state = 38
                 elif self.state == 41:
-                    self._create_token(Tokens.CT_STRING, value='STRING HERE')
+                    value = self._getString(f, marker, f.tell(), -2)
+                    self._create_token(Tokens.CT_STRING, value=value)
+
 
                 # Check end of file
                 # check it last so the previous consumed char
@@ -317,3 +323,10 @@ class Lexer(object):
             token.error(custom)
 
         exit(1)
+
+    def _getString(self, file, marker, current, offset=0):
+        file.seek(marker)
+        value = file.read(current - marker + offset)
+        file.seek(current)
+
+        return value

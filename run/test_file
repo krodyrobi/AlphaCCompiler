@@ -23,6 +23,8 @@
 */ +
 /* test */ +
 /* // asdf */ +
+
 '\n'
+"//test\n/**/"
 'a'
-"//test\n"
+// '' this won't work since null char is not in the TD
