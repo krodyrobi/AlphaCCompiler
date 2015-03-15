@@ -60,6 +60,29 @@ class Lexer(object):
                         self.state = 12
                         self._consume_char(f)
 
+                    # 2 character operators
+                    elif self.character == '<':
+                        self.state = 13
+                        self._consume_char(f)
+                    elif self.character == '>':
+                        self.state = 16
+                        self._consume_char(f)
+                    elif self.character == '=':
+                        self.state = 19
+                        self._consume_char(f)
+                    elif self.character == '!':
+                        self.state = 22
+                        self._consume_char(f)
+                    elif self.character == '|':
+                        self.state = 25
+                        self._consume_char(f)
+                    elif self.character == '&':
+                        self.state = 27
+                        self._consume_char(f)
+                    elif self.character == '/':
+                        self.state = 31
+                        self._consume_char(f)
+
 
                 elif self.state == 1:
                     self._create_token(Tokens.ADD)
@@ -85,6 +108,107 @@ class Lexer(object):
                     self._create_token(Tokens.SEMICOLON)
                 elif self.state == 12:
                     self._create_token(Tokens.COMMA)
+                elif self.state == 13:
+                    if self.character == '=':
+                        self.state = 15
+                        self._consume_char(f)
+                    else:
+                        self.state = 14
+                elif self.state == 14:
+                    self._create_token(Tokens.LESS)
+                elif self.state == 15:
+                    self._create_token(Tokens.LESSEQ)
+
+                elif self.state == 16:
+                    if self.character == '=':
+                        self.state = 18
+                        self._consume_char(f)
+                    else:
+                        self.state = 17
+                elif self.state == 17:
+                    self._create_token(Tokens.GREATER)
+                elif self.state == 18:
+                    self._create_token(Tokens.GREATEREQ)
+
+                elif self.state == 19:
+                    if self.character == '=':
+                        self.state = 21
+                        self._consume_char(f)
+                    else:
+                        self.state = 20
+                elif self.state == 20:
+                    self._create_token(Tokens.ASSIGN)
+                elif self.state == 21:
+                    self._create_token(Tokens.EQUAL)
+
+                elif self.state == 22:
+                    if self.character == '=':
+                        self.state = 24
+                        self._consume_char(f)
+                    else:
+                        self.state = 23
+                elif self.state == 23:
+                    self._create_token(Tokens.NOT)
+                elif self.state == 24:
+                    self._create_token(Tokens.NOTEQ)
+
+                elif self.state == 25:
+                    if self.character == '|':
+                        self.state = 26
+                        self._consume_char(f)
+                    else:
+                        self._token_error(Tokens.OR, expected_chars='|', got=self.character)
+                elif self.state == 26:
+                    self._create_token(Tokens.OR)
+
+                elif self.state == 27:
+                    if self.character == '&':
+                        self.state = 28
+                        self._consume_char(f)
+                    else:
+                        self._token_error(Tokens.AND, expected_chars='&', got=self.character)
+                elif self.state == 28:
+                    self._create_token(Tokens.AND)
+
+                # Comments and DIV token
+                elif self.state == 29:
+                    if self.character not in "*/":
+                        self.state = 30
+                        self._consume_char(f)
+                    elif self.character == '*':
+                        self.state = 29
+                        self._consume_char(f)
+                    elif self.character == '/':
+                        self.state = 0
+                        self._consume_char(f)
+                elif self.state == 30:
+                    if self.character not in '*':
+                        if self.character in "\n\r":
+                            self.line += 1
+                            self.column = -1
+                        self.state = 30
+                        self._consume_char(f)
+                    elif self.character == '*':
+                        self.state = 29
+                        self._consume_char(f)
+                elif self.state == 31:
+                    if self.character == '*':
+                        self.state = 30
+                        self._consume_char(f)
+                    elif self.character == '/':
+                        self.state = 32
+                        self._consume_char(f)
+                    else:
+                        self.state = 33
+                elif self.state == 32:
+                    if self.character not in "\n\r\0":
+                        self.state = 32
+                        self._consume_char(f)
+                    else:
+                        self.state = 0
+                elif self.state == 33:
+                    self._create_token(Tokens.DIV)
+
 
                 # Check end of file
                 # check it last so the previous consumed char
@@ -109,11 +233,9 @@ class Lexer(object):
         self.line = 1
         self.column = -1
         self.state = 0
-        self.cur_pos = -1
         self.character = None
 
     def _consume_char(self, file):
-        self.cur_pos += 1
         self.column += 1
         self.character = file.read(1)
 
@@ -128,7 +250,7 @@ class Lexer(object):
 
         if expected_chars and got:
             expected_chars = 'Expected ' + expected_chars
-            got = 'but got ' + got + 'instead'
+            got = 'but got "' + got + '" instead'
 
         # to be removed only for debugging
         self.show_tokens()
