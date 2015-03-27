@@ -1,0 +1,35 @@
+int a;
+int a[];
+int a,b;
+int a,b[];
+int a[],b;
+int a[],b[];
+double a12_[1+1];
+
+struct circle a;
+struct circle a, b[];
+
+struct point {};
+struct point {
+    struct point a;
+    int b[];
+};
+
+int a(){}
+/////int a();  AtomC incompatible
+int a() {
+    while(1) {}
+    for(;;) {}
+    if(1){
+        print(a);
+    }else{}
+    a = - b;
+    a = !b;
+    //a = (int)b;  // check this as well !!!!!!!!!!!!!!!
+}
+
+int a(double b[]){}
+int a(struct circle b[], int c){}
+int* a(double b[]){}
+/////int** a(struct circle b[]){} /* AtomC does not have pointers only arrays check what is wrong here */
+

@@ -17,3 +17,6 @@ class Token(object):
             value = ':' + str(self.value)
 
         return str(self.code) + ('(%d, %d)' % (self.line, self.column) + value)
+
+    def has_code(self, code):
+        return self.code is code

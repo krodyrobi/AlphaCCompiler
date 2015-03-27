@@ -24,7 +24,7 @@ class Lexer(object):
 
     def scan(self, file_path):
         self.__prepare_scan()
-        end_hit = False
+        end_hit = 0
         offset = 0
         integer_base = 10
 
@@ -274,7 +274,7 @@ class Lexer(object):
                     else:
                         self._token_error(Tokens.CT_CHAR, expected_chars='\'', got=self.character)
                 elif self.state == 37:
-                    value = self._getString(f, marker, -2)
+                    value = self._get_string(f, marker, -2)
                     self._create_token(Tokens.CT_CHAR, value=value)
                 elif self.state == 38:
                     if self.character == '"':
@@ -301,7 +301,7 @@ class Lexer(object):
                     else:
                         self.state = 38
                 elif self.state == 41:
-                    value = self._getString(f, marker, -2)
+                    value = self._get_string(f, marker, -2)
                     self._create_token(Tokens.CT_STRING, value=value)
 
                 # ID
@@ -319,7 +319,7 @@ class Lexer(object):
                     else:
                         self.state = 43
                 elif self.state == 43:
-                    value = self._getString(f, marker, offset)
+                    value = self._get_string(f, marker, offset)
                     code = self.keywords_map.get(value, Tokens.ID)
 
                     if code != Tokens.ID:
@@ -413,7 +413,7 @@ class Lexer(object):
                     else:
                         self.state = 51
                 elif self.state == 51:
-                    value = int(self._getString(f, marker, offset), integer_base)
+                    value = int(self._get_string(f, marker, offset), integer_base)
                     self._create_token(Tokens.CT_INT, value)
                 elif self.state == 52:
                     if self.character in string.digits:
@@ -460,14 +460,13 @@ class Lexer(object):
                     else:
                         self.state = 57
                 elif self.state == 57:
-                    value = float(self._getString(f, marker, offset))
+                    value = float(self._get_string(f, marker, offset))
                     self._create_token(Tokens.CT_REAL, value)
 
                 # Check end of file
                 # check it last so the previous consumed char
                 # won't mess things up and make sure we gave the loop
-                # one more run before we trigger the END event
-                if end_hit:
+                if end_hit == 2:
                     self.column += 1
                     if self.state != 0:
                         self._token_error(Tokens.END, custom='Unexpected end of file')
@@ -476,7 +475,7 @@ class Lexer(object):
                         break
 
                 if not self.character:
-                    end_hit = True
+                    end_hit += 1
 
     def show_tokens(self):
         for token in self.tokens:
@@ -506,9 +505,6 @@ class Lexer(object):
             expected_chars = 'Expected [' + expected_chars + ']'
             got = ', but got ' + repr(got) + ' instead'
 
-        # to be removed only for debugging
-        self.show_tokens()
-
         if not custom:
             token.error(expected_chars, got)
         else:
@@ -516,12 +512,12 @@ class Lexer(object):
 
         exit(1)
 
-    def _getString(self, file, marker, offset=0):
+    @staticmethod
+    def _get_string(file, marker, offset=0):
         current = file.tell()
 
         file.seek(marker)
         value = file.read(current - marker + offset)
-
         file.seek(current)
 
         return value
