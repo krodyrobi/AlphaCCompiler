@@ -6,7 +6,6 @@
 => arrayDecl: LBRACKET expr? RBRACKET ;
 => typeName: typeBase arrayDecl? ;
 
-
 => declFunc: ( typeBase MUL? | VOID ) ID
             LPAR ( funcArg ( COMMA funcArg )* )? RPAR
             stmCompound ;

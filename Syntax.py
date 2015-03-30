@@ -41,17 +41,17 @@ class Syntax(object):
 
         tok = self._tokens[self._currentIndex]
 
-        print('to consume: ' + str(token) + ' got ' + str(tok))
+        # print('to consume: ' + str(token) + ' got ' + str(tok))
         if tok.has_code(token):
             self._consumedToken = tok
             self._currentIndex += 1
-            print('consumed')
+            # print('consumed')
             return True
 
         return False
 
     def _unit(self):
-        print(inspect.currentframe().f_code.co_name)
+        # print(inspect.currentframe().f_code.co_name)
         while True:
             if self._declare_structure():
                 pass
@@ -67,7 +67,7 @@ class Syntax(object):
         return True
 
     def _declare_structure(self):
-        print(inspect.currentframe().f_code.co_name)
+        # print(inspect.currentframe().f_code.co_name)
         start = self._currentIndex
         if not self.consume(Tokens.STRUCT):
             return False
@@ -92,7 +92,7 @@ class Syntax(object):
         return True
 
     def _declare_var(self):
-        print(inspect.currentframe().f_code.co_name)
+        # print(inspect.currentframe().f_code.co_name)
         start = self._currentIndex
         if not self._type_base():
             return False
@@ -119,7 +119,7 @@ class Syntax(object):
         return True
 
     def _declare_function(self):
-        print(inspect.currentframe().f_code.co_name)
+        # print(inspect.currentframe().f_code.co_name)
         if self._type_base():
             self.consume(Tokens.MUL)
         elif not self.consume(Tokens.VOID):
@@ -142,7 +142,7 @@ class Syntax(object):
         return True
 
     def _declare_function_optional_part(self):
-        print(inspect.currentframe().f_code.co_name)
+        # print(inspect.currentframe().f_code.co_name)
         if self._func_arg():
             while True:
                 if self.consume(Tokens.COMMA):
@@ -153,7 +153,7 @@ class Syntax(object):
         return True
 
     def _type_base(self):
-        print(inspect.currentframe().f_code.co_name)
+        # print(inspect.currentframe().f_code.co_name)
         if self.consume(Tokens.INT):
             pass
         elif self.consume(Tokens.DOUBLE):
@@ -168,7 +168,7 @@ class Syntax(object):
         return True
 
     def _type_name(self):
-        print(inspect.currentframe().f_code.co_name)
+        # print(inspect.currentframe().f_code.co_name)
         if not self._type_base():
             return False
 
@@ -176,7 +176,7 @@ class Syntax(object):
         return True
 
     def _array_decl(self):
-        print(inspect.currentframe().f_code.co_name)
+        # print(inspect.currentframe().f_code.co_name)
         if not self.consume(Tokens.LBRACKET):
             return False
 
@@ -188,7 +188,7 @@ class Syntax(object):
         return True
 
     def _func_arg(self):
-        print(inspect.currentframe().f_code.co_name)
+        # print(inspect.currentframe().f_code.co_name)
         if not self._type_base():
             return False
 
@@ -199,14 +199,13 @@ class Syntax(object):
         return True
 
     def _expr(self):
-        print(inspect.currentframe().f_code.co_name)
+        # print(inspect.currentframe().f_code.co_name)
         return self._expr_assign()
 
     def _expr_assign(self):
-        print(inspect.currentframe().f_code.co_name)
+        # print(inspect.currentframe().f_code.co_name)
         start = self._currentIndex
         if self._expr_unary():
-            print('post unary')
             if self.consume(Tokens.ASSIGN):
                 if self._expr_assign():
                     return True
@@ -218,7 +217,7 @@ class Syntax(object):
         return self._expr_or()
 
     def _expr_or(self):
-        print(inspect.currentframe().f_code.co_name)
+        # print(inspect.currentframe().f_code.co_name)
         if not self._expr_and():
             return False
 
@@ -228,7 +227,7 @@ class Syntax(object):
         return True
 
     def _expr_or_(self):
-        print(inspect.currentframe().f_code.co_name)
+        # print(inspect.currentframe().f_code.co_name)
         if self.consume(Tokens.OR):
             if not self._expr_and():
                 self.error(custom="Missing OR operand")
@@ -237,7 +236,7 @@ class Syntax(object):
         return True
 
     def _expr_and(self):
-        print(inspect.currentframe().f_code.co_name)
+        # print(inspect.currentframe().f_code.co_name)
         if not self._expr_eq():
             return False
 
@@ -245,7 +244,7 @@ class Syntax(object):
         return True
 
     def _expr_and_(self):
-        print(inspect.currentframe().f_code.co_name)
+        # print(inspect.currentframe().f_code.co_name)
         if self.consume(Tokens.AND):
             if not self._expr_eq():
                 self.error(custom="Missing AND operand")
@@ -254,14 +253,14 @@ class Syntax(object):
         return True
 
     def _expr_eq(self):
-        print(inspect.currentframe().f_code.co_name)
+        # print(inspect.currentframe().f_code.co_name)
         if self._expr_rel():
             if self._expr_eq_():
                 return True
         return False
 
     def _expr_eq_(self):
-        print(inspect.currentframe().f_code.co_name)
+        # print(inspect.currentframe().f_code.co_name)
         if self.consume(Tokens.EQUAL) or self.consume(Tokens.NOTEQ):
             if self._expr_rel():
                 if self._expr_eq_():
@@ -272,7 +271,7 @@ class Syntax(object):
         return True
 
     def _expr_rel(self):
-        print(inspect.currentframe().f_code.co_name)
+        # print(inspect.currentframe().f_code.co_name)
         if not self._expr_add():
             return False
 
@@ -280,7 +279,7 @@ class Syntax(object):
         return True
 
     def _expr_rel_(self):
-        print(inspect.currentframe().f_code.co_name)
+        # print(inspect.currentframe().f_code.co_name)
         if self.consume(Tokens.LESS) or self.consume(Tokens.LESSEQ) \
                 or self.consume(Tokens.GREATER) or self.consume(Tokens.GREATEREQ):
             if self._expr_add():
@@ -292,7 +291,7 @@ class Syntax(object):
         return True
 
     def _expr_add(self):
-        print(inspect.currentframe().f_code.co_name)
+        # print(inspect.currentframe().f_code.co_name)
         if not self._expr_mul():
             return False
 
@@ -300,7 +299,7 @@ class Syntax(object):
         return True
 
     def _expr_add_(self):
-        print(inspect.currentframe().f_code.co_name)
+        # print(inspect.currentframe().f_code.co_name)
         if self.consume(Tokens.ADD) or self.consume(Tokens.SUB):
             if self._expr_mul():
                 if self._expr_add_():
@@ -311,14 +310,14 @@ class Syntax(object):
         return True
 
     def _expr_mul(self):
-        print(inspect.currentframe().f_code.co_name)
+        # print(inspect.currentframe().f_code.co_name)
         if self._expr_cast():
             if self._expr_mul_():
                 return True
         return False
 
     def _expr_mul_(self):
-        print(inspect.currentframe().f_code.co_name)
+        # print(inspect.currentframe().f_code.co_name)
         if self.consume(Tokens.MUL) or self.consume(Tokens.DIV):
             if self._expr_cast():
                 if self._expr_mul_():
@@ -329,7 +328,7 @@ class Syntax(object):
         return True
 
     def _expr_cast(self):
-        print(inspect.currentframe().f_code.co_name)
+        # print(inspect.currentframe().f_code.co_name)
         if self.consume(Tokens.LPAR):
             if not self._type_name():
                 self.error(custom="Cast type required")
@@ -346,7 +345,7 @@ class Syntax(object):
         return True
 
     def _expr_unary(self):
-        print(inspect.currentframe().f_code.co_name)
+        # print(inspect.currentframe().f_code.co_name)
         if self.consume(Tokens.SUB) or self.consume(Tokens.NOT):
             if not self._expr_unary():
                 self.error(custom="Missing unary expression after" + self._consumedToken.code)
@@ -357,14 +356,14 @@ class Syntax(object):
         return True
 
     def _expr_postfix(self):
-        print(inspect.currentframe().f_code.co_name)
+        # print(inspect.currentframe().f_code.co_name)
         if not self._expr_primary():
             return False
 
         return self._expr_postfix_()
 
     def _expr_postfix_(self):
-        print(inspect.currentframe().f_code.co_name)
+        # print(inspect.currentframe().f_code.co_name)
         if self.consume(Tokens.LBRACKET):
             if not self._expr():
                 self.error(custom="Missing expression after [")
@@ -377,11 +376,12 @@ class Syntax(object):
             if not self.consume(Tokens.ID):
                 self.error(Tokens.ID)
             self._expr_postfix_()
-        else:
-            return True
+
+        return True
 
     def _expr_primary(self):
-        print(inspect.currentframe().f_code.co_name)
+        # print(inspect.currentframe().f_code.co_name)
+        start = self._currentIndex
         if self.consume(Tokens.ID):
             self._expr_primary_optional_part()
             return True
@@ -395,14 +395,15 @@ class Syntax(object):
             return True
         elif self.consume(Tokens.LPAR):
             if not self._expr():
-                self.error(custom="Invalid expression after (")
+                self._currentIndex = start
+                return False
             if not self.consume(Tokens.RPAR):
                 self.error(Tokens.RPAR)
             return True
         return False
 
     def _expr_primary_optional_part(self):
-        print(inspect.currentframe().f_code.co_name)
+        # print(inspect.currentframe().f_code.co_name)
         if not self.consume(Tokens.LPAR):
             return False
 
@@ -420,7 +421,7 @@ class Syntax(object):
         return True
 
     def _stm(self):
-        print(inspect.currentframe().f_code.co_name)
+        # print(inspect.currentframe().f_code.co_name)
         if self._stm_compound():
             pass
         elif self.consume(Tokens.IF):
@@ -477,7 +478,7 @@ class Syntax(object):
         return True
 
     def _stm_compound(self):
-        print(inspect.currentframe().f_code.co_name)
+        # print(inspect.currentframe().f_code.co_name)
         if not self.consume(Tokens.LACC):
             return False
 

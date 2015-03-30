@@ -25,7 +25,14 @@ int a() {
     }else{}
     a = - b;
     a = !b;
-    //a = (int)b;  // check this as well !!!!!!!!!!!!!!!
+    a = (int)b;  // check this as well !!!!!!!!!!!!!!!
+    b = (double)!c;
+
+    {
+        int b;
+        b = a || a && c;
+        b = a || a && !c;
+    }
 }
 
 int a(double b[]){}
