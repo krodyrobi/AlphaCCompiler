@@ -1,5 +1,4 @@
-import inspect
-from Tokens import Tokens
+from modules.lexical_analyzer.Tokens import Tokens
 
 
 class Syntax(object):

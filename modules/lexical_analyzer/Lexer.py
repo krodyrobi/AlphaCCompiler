@@ -1,7 +1,8 @@
 import string
-from Token import Token
 from sys import exit
-from Tokens import Tokens
+
+from modules.lexical_analyzer.Token import Token
+from modules.lexical_analyzer.Tokens import Tokens
 
 
 class Lexer(object):
